@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Golf Tracker">
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="./manifest.json">
 <title>Jony Golf Tracker</title>
 <style>
 :root {
@@ -306,6 +306,10 @@ textarea { min-height: 80px; resize: vertical; }
   <div class="header">
     <h1>⛳ Jony Golf Tracker</h1>
     <p>记录每一次挥杆 · 打赢每一局心理战</p>
+    <div id="backup-banner" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(255,107,53,0.15);border:1px solid var(--accent2);border-radius:8px;font-size:0.75rem;color:var(--accent2);text-align:center;cursor:pointer;"
+      onclick="exportJSON()">
+      ⚠️ <b>鸿蒙PWA可能丢失数据</b> — 每次记完请点这里导出JSON备份到手机！
+    </div>
   </div>
 
   <div class="nav">
@@ -469,15 +473,46 @@ textarea { min-height: 80px; resize: vertical; }
 <script>
 // ===== SERVICE WORKER =====
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js').then(reg => {
+  navigator.serviceWorker.register('./service-worker.js').then(reg => {
     console.log('SW registered');
   }).catch(err => console.log('SW failed', err));
 }
 
 // ===== DATA STORE =====
 const DB = {
-  get(key) { return JSON.parse(localStorage.getItem('golf_'+key)||'[]'); },
-  set(key,val) { localStorage.setItem('golf_'+key, JSON.stringify(val)); },
+  available: false,
+  test() {
+    try {
+      const testKey = '__golf_storage_test__';
+      localStorage.setItem(testKey, 'ok');
+      const v = localStorage.getItem(testKey);
+      localStorage.removeItem(testKey);
+      this.available = (v === 'ok');
+      return this.available;
+    } catch(e) {
+      this.available = false;
+      return false;
+    }
+  },
+  get(key) {
+    if (!this.available) return [];
+    try {
+      return JSON.parse(localStorage.getItem('golf_'+key)||'[]');
+    } catch(e) { return []; }
+  },
+  set(key,val) {
+    if (!this.available) {
+      toast('❌ 存储不可用，数据无法保存！请用导出备份');
+      return false;
+    }
+    try {
+      localStorage.setItem('golf_'+key, JSON.stringify(val));
+      return true;
+    } catch(e) {
+      toast('❌ 保存失败，空间可能已满');
+      return false;
+    }
+  },
   all() {
     const practice = this.get('practice').map(x=>{x._type='practice';return x;});
     const rounds = this.get('rounds').map(x=>{x._type='round';return x;});
@@ -490,6 +525,11 @@ let tempMedia = { p: [], r: [] };
 
 // ===== INIT =====
 window.onload = () => {
+  const lsOk = DB.test();
+  if (!lsOk) {
+    toast('⚠️ 存储受限！请每次记完导出JSON备份');
+    document.getElementById('backup-banner').style.display = 'block';
+  }
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('p-date').value = today;
   document.getElementById('r-date').value = today;
@@ -566,11 +606,11 @@ function savePractice() {
   };
   const arr = DB.get('practice');
   arr.unshift(rec);
-  DB.set('practice', arr);
+  if (!DB.set('practice', arr)) return;
   tempMedia.p = [];
   renderPreview('p');
   clearForm('p');
-  toast('✅ 练习记录已保存！');
+  toast('✅ 练习记录已保存！建议立即导出备份');
   updateExportSelect();
 }
 
@@ -596,11 +636,11 @@ function saveRound() {
   };
   const arr = DB.get('rounds');
   arr.unshift(rec);
-  DB.set('rounds', arr);
+  if (!DB.set('rounds', arr)) return;
   tempMedia.r = [];
   renderPreview('r');
   clearForm('r');
-  toast('✅ 下场记录已保存！');
+  toast('✅ 下场记录已保存！建议立即导出备份');
   updateExportSelect();
 }
 
