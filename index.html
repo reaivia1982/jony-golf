@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Golf Tracker">
+<link rel="manifest" href="manifest.json">
+<title>Jony Golf Tracker</title>
+<style>
+:root {
+  --bg: #0f0f1a;
+  --card: #1a1a2e;
+  --accent: #ffd700;
+  --accent2: #ff6b35;
+  --text: #f0f0f0;
+  --text2: #aaa;
+  --border: #2a2a3e;
+  --success: #4caf50;
+  --danger: #f44336;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+.app { max-width: 600px; margin: 0 auto; padding: 16px; }
+.header {
+  text-align: center;
+  padding: 20px 0 10px;
+  position: sticky;
+  top: 0;
+  background: linear-gradient(180deg, var(--bg) 80%, transparent);
+  z-index: 10;
+}
+.header h1 { font-size: 1.4rem; color: var(--accent); letter-spacing: 1px; }
+.header p { font-size: 0.8rem; color: var(--text2); margin-top: 4px; }
+
+.nav {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.nav-btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 12px 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+  text-align: center;
+}
+.nav-btn.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  border-color: var(--accent);
+}
+
+.section { display: none; }
+.section.active { display: block; animation: fadeIn .3s; }
+@keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; } }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 1rem;
+  color: var(--accent);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-group { margin-bottom: 14px; }
+label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text2);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+input[type="text"], input[type="date"], input[type="number"], select, textarea {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border .2s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { min-height: 80px; resize: vertical; }
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.checkbox-item input { display: none; }
+.checkbox-item.checked {
+  border-color: var(--accent);
+  background: rgba(255,215,0,0.08);
+  color: var(--accent);
+}
+
+.media-upload {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+}
+.media-upload:active { border-color: var(--accent); background: rgba(255,215,0,0.05); }
+.media-upload input { display: none; }
+.media-preview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+.media-preview-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.media-preview-item img, .media-preview-item video {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.media-preview-item .del {
+  position: absolute; top: 4px; right: 4px;
+  background: var(--danger); color: #fff;
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; cursor: pointer;
+}
+
+.btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #000;
+}
+.btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+.btn-secondary {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+.record-list { margin-top: 8px; }
+.record-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.record-item:active { border-color: var(--accent); }
+.record-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.record-item-type {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.record-item-type.practice { background: var(--accent); color: #000; }
+.record-item-type.round { background: var(--accent2); color: #fff; }
+.record-item-title { font-size: 0.95rem; font-weight: 600; }
+.record-item-date { font-size: 0.75rem; color: var(--text2); }
+.record-item-summary {
+  font-size: 0.8rem;
+  color: var(--text2);
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.detail-view { display: none; }
+.detail-view.active { display: block; animation: fadeIn .3s; }
+.detail-view .back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+.detail-field {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.detail-field:last-child { border-bottom: none; }
+.detail-label {
+  font-size: 0.75rem;
+  color: var(--text2);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.detail-value { font-size: 0.9rem; line-height: 1.5; }
+
+.export-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--text2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 12px 0;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--accent);
+  color: #000;
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: transform .3s;
+  z-index: 100;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text2);
+}
+.empty-state .emoji { font-size: 3rem; margin-bottom: 12px; }
+
+@media (min-width: 600px) {
+  .app { padding: 24px; }
+  .checkbox-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>⛳ Jony Golf Tracker</h1>
+    <p>记录每一次挥杆 · 打赢每一局心理战</p>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="showSection('record')">📝 记一笔</button>
+    <button class="nav-btn" onclick="showSection('history')">📋 历史</button>
+    <button class="nav-btn" onclick="showSection('export')">📤 导出</button>
+  </div>
+
+  <!-- RECORD -->
+  <div id="section-record" class="section active">
+    <div class="card">
+      <div class="card-title">选择类型</div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" id="btn-practice" onclick="setRecordType('practice')" style="flex:1;background:var(--accent);color:#000;">练习</button>
+        <button class="btn btn-secondary" id="btn-round" onclick="setRecordType('round')" style="flex:1;">下场</button>
+      </div>
+    </div>
+
+    <!-- Practice Form -->
+    <div id="form-practice" class="card">
+      <div class="card-title">🏌️ 练习记录</div>
+      <div class="form-group"><label>日期</label><input type="date" id="p-date"></div>
+      <div class="form-group"><label>地点 / 练习场</label><input type="text" id="p-location" placeholder="例如：东庄练习场"></div>
+      <div class="form-group">
+        <label>练习项目</label>
+        <select id="p-type">
+          <option value="挥杆">挥杆</option>
+          <option value="推杆">推杆</option>
+          <option value="切杆">切杆</option>
+          <option value="专项">专项（教练课/特定动作）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>本次聚焦点（多选）</label>
+        <div class="checkbox-grid" id="p-focus">
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="上杆幅度">上杆幅度</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="胸椎转动">胸椎转动</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="手臂伸展">手臂伸展</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="下杆模式">下杆模式</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="起杆动作">起杆动作</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="放松发力">放松发力</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="骨盆/腰椎带动">骨盆/腰椎带动</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="其他">其他</div>
+        </div>
+      </div>
+      <div class="form-group"><label>好球感觉（触球质量好的那些）</label><textarea id="p-good" placeholder="例如：今天有几个球感觉胸椎转到位了，手臂撑住了，球又直又远..."></textarea></div>
+      <div class="form-group"><label>坏球问题 / 旧习惯回退</label><textarea id="p-bad" placeholder="例如：后半段累了，手又缩了，上杆又over了..."></textarea></div>
+      <div class="form-group"><label>教练要点 / 自我总结</label><textarea id="p-tips" placeholder="教练说了什么，或者你自己悟到的..."></textarea></div>
+      <div class="form-group">
+        <label>视频 / 照片</label>
+        <div class="media-upload" onclick="document.getElementById('p-media').click()">
+          <div style="font-size:1.5rem;margin-bottom:6px;">📷 / 🎥</div>
+          <div style="font-size:0.8rem;color:var(--text2);">点击上传视频或照片</div>
+          <input type="file" id="p-media" accept="image/*,video/*" multiple onchange="handleMedia('p',this)">
+        </div>
+        <div class="media-preview" id="p-preview"></div>
+      </div>
+      <div class="form-group"><label>其他备注</label><textarea id="p-notes" placeholder="天气、身体状态、用的球杆、任何想说的话..."></textarea></div>
+      <button class="btn btn-primary" onclick="savePractice()">💾 保存练习记录</button>
+    </div>
+
+    <!-- Round Form -->
+    <div id="form-round" class="card" style="display:none;">
+      <div class="card-title">⛳ 下场记录</div>
+      <div class="form-group"><label>日期</label><input type="date" id="r-date"></div>
+      <div class="form-group"><label>球场</label><input type="text" id="r-course" placeholder="例如：佘山国际"></div>
+      <div class="form-group"><label>天气 / 温度</label><input type="text" id="r-weather" placeholder="例如：多云 22°C 微风"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group"><label>总杆数</label><input type="number" id="r-score" placeholder="92"></div>
+        <div class="form-group"><label>推杆数</label><input type="number" id="r-putts" placeholder="36"></div>
+        <div class="form-group"><label>上球道率 (%)</label><input type="number" id="r-fairway" placeholder="例如：7/14"></div>
+        <div class="form-group"><label>标准杆上果岭率 (%)</label><input type="number" id="r-green" placeholder="例如：8/18"></div>
+      </div>
+      <div class="form-group">
+        <label>下场前心理状态</label>
+        <select id="r-mental">
+          <option value="放松自信">放松自信</option>
+          <option value="有点紧张">有点紧张</option>
+          <option value="想太多">想太多（想打成绩）</option>
+          <option value="疲惫">疲惫 / 没睡好</option>
+          <option value="兴奋">兴奋 / 期待</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>今天做得好的（多选）</label>
+        <div class="checkbox-grid" id="r-good">
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="上杆幅度控制">上杆幅度控制</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="胸椎转动到位">胸椎转动到位</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="手臂撑住了">手臂撑住了</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="下杆顺畅">下杆顺畅</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="推杆手感">推杆手感</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="短杆救球">短杆救球</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="心理稳定">心理稳定（没崩）</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="策略执行">策略执行（按计划打）</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>今天犯的老毛病 / 崩盘点（多选）</label>
+        <div class="checkbox-grid" id="r-bad">
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="上杆Over">上杆Over</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="手缩了">手缩了 / 没撑住</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="胸椎没转">胸椎没转 / 用手抡</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="下杆模式乱了">下杆模式乱了</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="起杆不稳">起杆不稳</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="想发力">太想发力 / 肩膀盖</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="推杆崩盘">推杆崩盘</div>
+          <div class="checkbox-item" onclick="toggleCheck(this)"><input type="checkbox" value="心态崩了">心态崩了（连续失误后）</div>
+        </div>
+      </div>
+      <div class="form-group"><label>哪几洞出了问题 / 怎么出的</label><textarea id="r-mistakes" placeholder="例如：第3洞OB，第7洞三推，第12洞上杆over打厚..."></textarea></div>
+      <div class="form-group"><label>Rotella心理战报（如果有）</label><textarea id="r-rotella" placeholder="例如：今天用了画面法则，站在tee上想象球道中间的落点，前三洞很稳..."></textarea></div>
+      <div class="form-group"><label>视频 / 照片</label>
+        <div class="media-upload" onclick="document.getElementById('r-media').click()">
+          <div style="font-size:1.5rem;margin-bottom:6px;">📷 / 🎥</div>
+          <div style="font-size:0.8rem;color:var(--text2);">点击上传视频或照片</div>
+          <input type="file" id="r-media" accept="image/*,video/*" multiple onchange="handleMedia('r',this)">
+        </div>
+        <div class="media-preview" id="r-preview"></div>
+      </div>
+      <div class="form-group"><label>下场总结 / 下次要注意的</label><textarea id="r-notes" placeholder="最重要的三点：1... 2... 3..."></textarea></div>
+      <button class="btn btn-primary" onclick="saveRound()">💾 保存下场记录</button>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="section-history" class="section">
+    <div id="record-list" class="record-list"></div>
+  </div>
+
+  <!-- DETAIL VIEW -->
+  <div id="detail-view" class="detail-view">
+    <div class="back-btn" onclick="backToList()">← 返回列表</div>
+    <div id="detail-content"></div>
+  </div>
+
+  <!-- EXPORT -->
+  <div id="section-export" class="section">
+    <div class="card">
+      <div class="card-title">📤 导出战报给 小cc</div>
+      <p style="font-size:0.85rem;color:var(--text2);margin-bottom:12px;">选一条最近的记录，生成给kimi分析的格式，复制粘贴就行。</p>
+      <div class="form-group">
+        <label>选择记录</label>
+        <select id="export-select"><option>先记几条记录才能导出</option></select>
+      </div>
+      <button class="btn btn-primary" onclick="generateExport()">生成战报</button>
+      <div class="export-box" id="export-output">点击生成...</div>
+      <button class="btn btn-secondary" onclick="copyExport()">📋 复制全部</button>
+    </div>
+    <div class="card" style="margin-top:12px;">
+      <div class="card-title">💾 数据备份 / 恢复</div>
+      <p style="font-size:0.8rem;color:var(--text2);margin-bottom:12px;">所有数据存在手机本地。换手机前请导出JSON备份。</p>
+      <button class="btn btn-secondary" onclick="exportJSON()">导出JSON备份</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">导入JSON</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(this)">
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ===== SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').then(reg => {
+    console.log('SW registered');
+  }).catch(err => console.log('SW failed', err));
+}
+
+// ===== DATA STORE =====
+const DB = {
+  get(key) { return JSON.parse(localStorage.getItem('golf_'+key)||'[]'); },
+  set(key,val) { localStorage.setItem('golf_'+key, JSON.stringify(val)); },
+  all() {
+    const practice = this.get('practice').map(x=>{x._type='practice';return x;});
+    const rounds = this.get('rounds').map(x=>{x._type='round';return x;});
+    return [...practice, ...rounds].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  }
+};
+
+let currentType = 'practice';
+let tempMedia = { p: [], r: [] };
+
+// ===== INIT =====
+window.onload = () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('p-date').value = today;
+  document.getElementById('r-date').value = today;
+  renderList();
+  updateExportSelect();
+};
+
+// ===== NAV =====
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('section-'+id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  if(id==='history') renderList();
+  if(id==='export') updateExportSelect();
+}
+
+// ===== TYPE SWITCH =====
+function setRecordType(t) {
+  currentType = t;
+  document.getElementById('form-practice').style.display = t==='practice'?'block':'none';
+  document.getElementById('form-round').style.display = t==='round'?'block':'none';
+  document.getElementById('btn-practice').style.background = t==='practice'?'var(--accent)':'var(--bg)';
+  document.getElementById('btn-practice').style.color = t==='practice'?'#000':'var(--text)';
+  document.getElementById('btn-round').style.background = t==='round'?'var(--accent2)':'var(--bg)';
+  document.getElementById('btn-round').style.color = t==='round'?'#fff':'var(--text)';
+}
+
+// ===== CHECKBOX =====
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+  const cb = el.querySelector('input');
+  cb.checked = el.classList.contains('checked');
+}
+
+// ===== MEDIA =====
+function handleMedia(prefix, input) {
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      tempMedia[prefix].push({ name: file.name, type: file.type, data: e.target.result });
+      renderPreview(prefix);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function renderPreview(prefix) {
+  const box = document.getElementById(prefix+'-preview');
+  box.innerHTML = tempMedia[prefix].map((m,i)=>{
+    if(m.type.startsWith('video')) return `<div class="media-preview-item"><video src="${m.data}" controls></video><div class="del" onclick="removeMedia('${prefix}',${i})">×</div></div>`;
+    return `<div class="media-preview-item"><img src="${m.data}"><div class="del" onclick="removeMedia('${prefix}',${i})">×</div></div>`;
+  }).join('');
+}
+function removeMedia(prefix, idx) {
+  tempMedia[prefix].splice(idx,1);
+  renderPreview(prefix);
+}
+
+// ===== SAVE =====
+function savePractice() {
+  const focus = Array.from(document.querySelectorAll('#p-focus .checked input')).map(x=>x.value);
+  const rec = {
+    id: Date.now(),
+    date: document.getElementById('p-date').value,
+    location: document.getElementById('p-location').value,
+    practiceType: document.getElementById('p-type').value,
+    focusPoints: focus,
+    goodFeel: document.getElementById('p-good').value,
+    badFeel: document.getElementById('p-bad').value,
+    tips: document.getElementById('p-tips').value,
+    media: tempMedia.p,
+    notes: document.getElementById('p-notes').value
+  };
+  const arr = DB.get('practice');
+  arr.unshift(rec);
+  DB.set('practice', arr);
+  tempMedia.p = [];
+  renderPreview('p');
+  clearForm('p');
+  toast('✅ 练习记录已保存！');
+  updateExportSelect();
+}
+
+function saveRound() {
+  const good = Array.from(document.querySelectorAll('#r-good .checked input')).map(x=>x.value);
+  const bad = Array.from(document.querySelectorAll('#r-bad .checked input')).map(x=>x.value);
+  const rec = {
+    id: Date.now(),
+    date: document.getElementById('r-date').value,
+    course: document.getElementById('r-course').value,
+    weather: document.getElementById('r-weather').value,
+    score: document.getElementById('r-score').value,
+    putts: document.getElementById('r-putts').value,
+    fairway: document.getElementById('r-fairway').value,
+    green: document.getElementById('r-green').value,
+    mental: document.getElementById('r-mental').value,
+    goodAspects: good,
+    badAspects: bad,
+    mistakes: document.getElementById('r-mistakes').value,
+    rotella: document.getElementById('r-rotella').value,
+    media: tempMedia.r,
+    notes: document.getElementById('r-notes').value
+  };
+  const arr = DB.get('rounds');
+  arr.unshift(rec);
+  DB.set('rounds', arr);
+  tempMedia.r = [];
+  renderPreview('r');
+  clearForm('r');
+  toast('✅ 下场记录已保存！');
+  updateExportSelect();
+}
+
+function clearForm(prefix) {
+  document.querySelectorAll('#form-'+prefix+' input[type=text], #form-'+prefix+' input[type=number], #form-'+prefix+' textarea').forEach(x=>x.value='');
+  document.querySelectorAll('#form-'+prefix+' .checked').forEach(x=>x.classList.remove('checked'));
+  document.querySelectorAll('#form-'+prefix+' input[type=checkbox]').forEach(x=>x.checked=false);
+}
+
+// ===== LIST =====
+function renderList() {
+  const list = DB.all();
+  const box = document.getElementById('record-list');
+  if(!list.length) {
+    box.innerHTML = '<div class="empty-state"><div class="emoji">⛳</div><div>还没有记录</div><div style="font-size:0.8rem;margin-top:8px;">先去「记一笔」吧！</div></div>';
+    return;
+  }
+  box.innerHTML = list.map(r => {
+    const isP = r._type==='practice';
+    const title = isP ? `${r.practiceType} · ${r.location||'练习场'}` : `${r.course||'未知球场'} · ${r.score||'?'}杆`;
+    const summary = isP ? (r.goodFeel||r.notes||'').slice(0,50) : (r.notes||r.mistakes||'').slice(0,50);
+    const mediaCount = (r.media||[]).length;
+    return `<div class="record-item" onclick="showDetail(${r.id},'${r._type}')">
+      <div class="record-item-header">
+        <div>
+          <span class="record-item-type ${r._type}">${isP?'练习':'下场'}</span>
+          <span class="record-item-title">${title}</span>
+        </div>
+      </div>
+      <div class="record-item-date">${r.date} ${mediaCount?`· ${mediaCount}个视频/照片`:''}</div>
+      <div class="record-item-summary">${summary}${summary.length>=50?'...':''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== DETAIL =====
+function showDetail(id, type) {
+  const arr = DB.get(type==='practice'?'practice':'rounds');
+  const r = arr.find(x=>x.id===id);
+  if(!r) return;
+  const isP = type==='practice';
+
+  let html = '<div class="card">';
+  html += `<div class="card-title">${isP?'🏌️ 练习详情':'⛳ 下场详情'}</div>`;
+
+  const fields = isP ? [
+    ['日期', r.date],
+    ['地点', r.location],
+    ['练习项目', r.practiceType],
+    ['聚焦点', (r.focusPoints||[]).join('、')],
+    ['好球感觉', r.goodFeel],
+    ['坏球问题', r.badFeel],
+    ['教练要点', r.tips],
+    ['备注', r.notes]
+  ] : [
+    ['日期', r.date],
+    ['球场', r.course],
+    ['天气', r.weather],
+    ['总杆数', r.score + (r.putts?' · 推'+r.putts+'杆':'')],
+    ['上球道/上果岭', (r.fairway?'球道'+r.fairway+' ':'')+(r.green?'果岭'+r.green:'')],
+    ['心理状态', r.mental],
+    ['做得好的', (r.goodAspects||[]).join('、')],
+    ['犯的老毛病', (r.badAspects||[]).join('、')],
+    ['问题洞', r.mistakes],
+    ['Rotella心理', r.rotella],
+    ['总结', r.notes]
+  ];
+
+  fields.forEach(([k,v])=>{
+    if(v && v.toString().trim()) html += `<div class="detail-field"><div class="detail-label">${k}</div><div class="detail-value">${v}</div></div>`;
+  });
+
+  if(r.media && r.media.length) {
+    html += `<div class="detail-field"><div class="detail-label">视频 / 照片 (${r.media.length})</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;">`;
+    r.media.forEach(m=>{
+      if(m.type.startsWith('video')) html += `<video src="${m.data}" controls style="width:100%;border-radius:8px;"></video>`;
+      else html += `<img src="${m.data}" style="width:100%;border-radius:8px;">`;
+    });
+    html += '</div></div>';
+  }
+
+  html += `<button class="btn btn-secondary" onclick="deleteRecord(${r.id},'${type}')" style="margin-top:12px;color:var(--danger);border-color:var(--danger);">🗑️ 删除这条记录</button>`;
+  html += '</div>';
+
+  document.getElementById('detail-content').innerHTML = html;
+  document.getElementById('section-history').style.display='none';
+  document.getElementById('detail-view').classList.add('active');
+}
+function backToList() {
+  document.getElementById('detail-view').classList.remove('active');
+  document.getElementById('section-history').style.display='block';
+}
+function deleteRecord(id,type) {
+  if(!confirm('确认删除这条记录？')) return;
+  let arr = DB.get(type==='practice'?'practice':'rounds');
+  arr = arr.filter(x=>x.id!==id);
+  DB.set(type==='practice'?'practice':'rounds', arr);
+  backToList();
+  renderList();
+  updateExportSelect();
+  toast('已删除');
+}
+
+// ===== EXPORT =====
+function updateExportSelect() {
+  const all = DB.all();
+  const sel = document.getElementById('export-select');
+  if(!all.length) { sel.innerHTML='<option>还没有记录</option>'; return; }
+  sel.innerHTML = all.map((r,i)=>`<option value="${r.id}|${r._type}">[${r._type==='practice'?'练':'下'}] ${r.date} ${r._type==='practice'?(r.practiceType+' '+r.location):(r.course+' '+r.score+'杆')}</option>`).join('');
+}
+
+function generateExport() {
+  const val = document.getElementById('export-select').value;
+  if(!val || val.includes('还没有')) { toast('先选一条记录'); return; }
+  const [idStr, type] = val.split('|');
+  const id = parseInt(idStr);
+  const arr = DB.get(type==='practice'?'practice':'rounds');
+  const r = arr.find(x=>x.id===id);
+  if(!r) return;
+
+  const isP = type==='practice';
+  let md = `# ${isP?'🏌️ 练习战报':'⛳ 下场战报'}\n\n`;
+  md += `**日期：** ${r.date}\n`;
+  md += isP ? `**地点：** ${r.location||'-'}\n**项目：** ${r.practiceType}\n` : `**球场：** ${r.course||'-'}\n**天气：** ${r.weather||'-'}\n**杆数：** ${r.score||'?'}杆 (推${r.putts||'?'}杆)\n`;
+  md += `\n---\n\n`;
+
+  if(isP) {
+    md += `## 聚焦点\n${(r.focusPoints||[]).join('、')||'-'}\n\n`;
+    md += `## 好球感觉 ✅\n${r.goodFeel||'-'}\n\n`;
+    md += `## 坏球问题 ⚠️\n${r.badFeel||'-'}\n\n`;
+    md += `## 教练要点 / 自我总结\n${r.tips||'-'}\n\n`;
+    md += `## 其他备注\n${r.notes||'-'}\n`;
+  } else {
+    md += `## 心理状态\n${r.mental||'-'}\n\n`;
+    md += `## 今天做得好的 ✅\n${(r.goodAspects||[]).join('、')||'-'}\n\n`;
+    md += `## 犯的老毛病 ⚠️\n${(r.badAspects||[]).join('、')||'-'}\n\n`;
+    md += `## 问题洞复盘\n${r.mistakes||'-'}\n\n`;
+    md += `## Rotella心理战报\n${r.rotella||'-'}\n\n`;
+    md += `## 总结\n${r.notes||'-'}\n`;
+  }
+
+  md += `\n---\n**小cc，请帮我分析今天的记录，重点关注：**\n1. 旧习惯是否回退\n2. 技术动作的关键点\n3. 下次练习/下场建议\n`;
+
+  document.getElementById('export-output').textContent = md;
+  toast('战报生成完毕！');
+}
+
+function copyExport() {
+  const text = document.getElementById('export-output').textContent;
+  if(!text || text==='点击生成...') { toast('先点生成'); return; }
+  navigator.clipboard.writeText(text).then(()=>toast('📋 已复制到剪贴板！'));
+}
+
+function exportJSON() {
+  const data = {
+    practice: DB.get('practice'),
+    rounds: DB.get('rounds'),
+    exportTime: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `golf_backup_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  toast('JSON备份已下载');
+}
+
+function importJSON(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(data.practice) DB.set('practice', data.practice);
+      if(data.rounds) DB.set('rounds', data.rounds);
+      renderList();
+      updateExportSelect();
+      toast('✅ 数据恢复成功！');
+    } catch(err) {
+      toast('❌ 文件格式不对');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ===== UTILS =====
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
